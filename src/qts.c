@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <math.h>
 #include <slow5/slow5.h>
 #include "error.h"
 #include "sigtk.h"
@@ -22,6 +23,21 @@ static struct option long_options[] = {
     {"output",required_argument,0,'o'},            //3 output file
     {"bits",required_argument,0,'b'},               //4 number of LSB bits to truncate
 };
+
+
+int round_to_power_of_2(int number) {
+    double power = log2(number);
+    int rounded_power = round(power);
+    int rounded_number = (int)pow(2, rounded_power);
+    
+    // Check if the rounded number is closer to the next power of 2
+    int next_power = (int)pow(2, rounded_power + 1);
+    if (abs(number - next_power) < abs(number - rounded_number)) {
+        rounded_number = next_power;
+    }
+    
+    return rounded_number;
+}
 
 int qtsmain(int argc, char* argv[]) {
 
@@ -100,7 +116,7 @@ int qtsmain(int argc, char* argv[]) {
     while((ret = slow5_get_next(&rec,sp)) >= 0){
 
         for(uint64_t i=0;i<rec->len_raw_signal;i++){
-            rec->raw_signal[i] = ( rec->raw_signal[i] >> b ) << b;
+            rec->raw_signal[i] = round_to_power_of_2(rec->raw_signal[i]);  
         }
         //write to file
         if(slow5_write(rec, sp_w) < 0){
