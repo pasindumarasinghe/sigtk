@@ -26,17 +26,17 @@ static struct option long_options[] = {
 
 
 int round_to_power_of_2(int number) {
-    double power = log2(number);
-    int rounded_power = round(power);
-    int rounded_number = (int)pow(2, rounded_power);
+    // Extract the least 6 significant bits
+    int lsb_6_bits = number & 0b111111;
     
-    // Check if the rounded number is closer to the next power of 2
-    int next_power = (int)pow(2, rounded_power + 1);
-    if (abs(number - next_power) < abs(number - rounded_number)) {
-        rounded_number = next_power;
+    // Check if the least 6 significant bits are closer to 0, 32, or 64
+    if (lsb_6_bits < 32) {
+        return (number & ~0b111111) + 0; // Round down to the nearest power of 2
+    } else if (lsb_6_bits < 48) {
+        return (number & ~0b111111) + 32; // Round to 32
+    } else {
+        return (number & ~0b111111) + 64; // Round up to the nearest power of 2
     }
-    
-    return rounded_number;
 }
 
 int qtsmain(int argc, char* argv[]) {
