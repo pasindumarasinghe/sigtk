@@ -116,7 +116,7 @@ int qtsmain(int argc, char* argv[]) {
     while((ret = slow5_get_next(&rec,sp)) >= 0){
 
         for(uint64_t i=0;i<rec->len_raw_signal;i++){
-            rec->raw_signal[i] = round_to_power_of_2(rec->raw_signal[i]);  
+            rec->raw_signal[i] =  (rec->raw_signal[i]) | ((1 << b)-1);  
         }
         //write to file
         if(slow5_write(rec, sp_w) < 0){
