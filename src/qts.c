@@ -25,17 +25,21 @@ static struct option long_options[] = {
 };
 
 
-int round_to_power_of_2(int number) {
-    // Extract the least 6 significant bits
-    int lsb_6_bits = number & 0b111111;
+int round_to_power_of_2(int number, int number_of_bits) {
+    // Create a binary mask with the specified number of bits
+    int mask = (1 << number_of_bits) - 1;
     
-    // Check if the least 6 significant bits are closer to 0, 32, or 64
-    if (lsb_6_bits < 32) {
-        return (number & ~0b111111) + 0; // Round down to the nearest power of 2
-    } else if (lsb_6_bits < 48) {
-        return (number & ~0b111111) + 32; // Round to 32
+    // Extract the least significant bits
+    int lsb_bits = number & mask;
+    
+    // Calculate the threshold for rounding up
+    int threshold = (1 << (number_of_bits - 1));
+    
+    // Check if the least significant bits are closer to 0 or 2^n
+    if (lsb_bits < threshold) {
+        return (number & ~mask) + 0; // Round down to the nearest power of 2
     } else {
-        return (number & ~0b111111) + 64; // Round up to the nearest power of 2
+        return (number & ~mask) + (1 << number_of_bits); // Round up to the nearest power of 2
     }
 }
 
@@ -116,7 +120,7 @@ int qtsmain(int argc, char* argv[]) {
     while((ret = slow5_get_next(&rec,sp)) >= 0){
 
         for(uint64_t i=0;i<rec->len_raw_signal;i++){
-            rec->raw_signal[i] =  (rec->raw_signal[i]) | ((1 << b)-1);  
+            rec->raw_signal[i] =  round_to_power_of_2(rec->raw_signal[i], 1);
         }
         //write to file
         if(slow5_write(rec, sp_w) < 0){
